@@ -1,0 +1,27 @@
+#title: B-scan from a plastic system of pipes buried in a sand
+#domain: 0.7 0.7 0.7
+#dx_dy_dz: 0.002 0.002 0.002
+#time_window: 10e-9
+
+#material: 3 0.01 1 0 sand
+#material: 4 0 1 0 pvc
+
+#waveform: ricker 1 1e9 my_ricker
+#python:
+from gprMax.input_cmd_funcs import *
+x_steps = 270
+y_steps = 270
+step_size = 0.002
+hertzian_dipole('z', 0.04 + step_size * current_model_run % x_steps, 0.6, 0.08 + step_size * (current_model_run-1) // y_steps, 'my_ricker')
+rx(0.08 + step_size * current_model_run % x_steps, 0.6, 0.08 + step_size * (current_model_run-1) // y_steps)
+#end_python:
+
+#box: 0 0 0 0.7 0.6 0.7 sand
+#cylinder: 0.350 0.130 0.350 0.350 0.400 0.350 0.03 pvc
+#cylinder: 0.350 0.130 0.350 0.350 0.400 0.350 0.025 free_space
+#cylinder: 0.350 0.130 0 0.350 0.130 0.7 0.03 pvc
+#cylinder: 0.350 0.130 0 0.350 0.130 0.7 0.025 free_space
+#cylinder: 0.350 0.130 0.550 0.7 0.130 0.550 0.03 pvc
+#cylinder: 0.350 0.130 0.550 0.7 0.130 0.550 0.025 free_space
+
+geometry_view: 0 0 0 0.7 0.7 0.7 0.002 0.002 0.002 plastic_tube_large_model n

@@ -1,0 +1,27 @@
+# Python
+*.pyc
+*.pyo
+venv
+# Cython
+*.c
+*.so
+*.pyd
+*.vti
+*.vtp
+*.out
+tests
+experements
+
+# Mac OS X
+.DS_Store
+
+# build, dist and egg-info directories
+build/
+dist/
+*.egg-info/
+
+# Backup files
+*~
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
