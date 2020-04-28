@@ -56,8 +56,8 @@ in_file_content = """
 #waveform: ricker 1 1.5e9 my_ricker
 #hertzian_dipole: z 0.02 0.35 0 my_ricker
 #rx: 0.06 0.35 0
-#src_steps: 0.062 0 0
-#rx_steps: 0.062 0 0
+#src_steps: 0.001 0 0
+#rx_steps: 0.001 0 0
 
 #soil_peplinski: 0.5 0.5 2.0 2.66 0.001 0.1 my_soil
 #fractal_box: 0 0 0 0.7 0.35 0.001 1.5 1 1 1 50 my_soil my_soil_box
@@ -82,7 +82,7 @@ in_img = Image.fromarray(np.flip(in_img, axis=0))
 with open('in_file.in', 'w') as in_file:
     in_file.write(in_file_content.format(cylinders=cylinders).replace('#geometry_view', 'geometry_view'))
 
-api('in_file.in', 10)
+api('in_file.in', 620)
 merge_files('in_file', removefiles=True)
 data, dt = get_output_data('in_file_merged.out', 1, 'Ez')
 out_img = Image.fromarray(data)
