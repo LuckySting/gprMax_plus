@@ -85,7 +85,7 @@ in_img = Image.fromarray(in_img)
 with open('in_file.in', 'w') as in_file:
     in_file.write(in_file_content.format(cylinders=cylinders).replace('#geometry_view', 'geometry_view'))
 
-api('in_file.in', 2)
+api('in_file.in', 620, gpu=[0])
 merge_files('in_file', removefiles=True)
 data, dt = get_output_data('in_file_merged.out', 1, 'Ez')
 data = data + abs(np.min(data))
