@@ -1,3 +1,4 @@
+import re
 from random import randint
 
 import numpy as np
@@ -65,7 +66,20 @@ in_file_content = """
 
 #geometry_view: 0 0 0 0.7 0.4 0.002 0.002 0.002 0.002 in_geometry n
 """
-for i in range(1000):
+max_x = 0
+max_y = 0
+try:
+    os.mkdir('x')
+except FileExistsError:
+    max_x = max([int(re.sub('\D', '', filename)) for filename in os.listdir('x')])
+try:
+    os.mkdir('y')
+except FileExistsError:
+    max_y = max([int(re.sub('\D', '', filename)) for filename in os.listdir('y')])
+
+s = max([max_x, max_y, 0]) + 1
+
+for i in range(s, 1000):
     cylinders = ''.join(get_cylinders(0.7, 0.4, 0.01, 3, 0.05, 0.03))
 
     with open('in_file.in', 'w') as in_file:
@@ -92,13 +106,5 @@ for i in range(1000):
     data = data / np.max(data) * 255
     out_img = Image.fromarray(data)
     out_img = out_img.resize(in_img.size)
-    try:
-        os.mkdir('x')
-    except FileExistsError:
-        pass
-    try:
-        os.mkdir('y')
-    except FileExistsError:
-        pass
-    in_img.convert('RGB').save('x/{}.png'.format(i), 'PNG')
-    out_img.convert('RGB').save('y/{}.png'.format(i), 'PNG')
+    in_img.convert('RGB').save('x/in_{}.png'.format(i), 'PNG')
+    out_img.convert('RGB').save('y/out_{}.png'.format(i), 'PNG')
