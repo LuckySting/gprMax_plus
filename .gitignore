@@ -9,7 +9,6 @@ venv
 *.vti
 *.vtp
 *.out
-tests
 experements
 
 # Mac OS X
