@@ -4,6 +4,9 @@ from random import randint
 import numpy as np
 from PIL import Image
 import os
+
+from scipy.ndimage import gaussian_filter, laplace
+import matplotlib.pyplot as plt
 from gprMax.gprMax import api
 from tools.outputfiles_merge import merge_files, get_output_data
 import pyvista
@@ -60,7 +63,7 @@ in_file_content = """
 #rx_steps: 0.004 0 0
 
 #soil_peplinski: 0.5 0.5 2.0 2.66 0.001 0.1 my_soil
-#fractal_box: 0 0 0 0.7 0.35 0.002 1.5 1 1 1 50 my_soil my_soil_box
+#fractal_box: 0 0 0 0.7 0.35 0.002 1.5 1 1 1 50 my_soil my_soil_box {seed}
 
 {cylinders}
 
@@ -71,22 +74,22 @@ max_y = 0
 try:
     os.mkdir('x')
 except FileExistsError:
-    max_x = max([int(re.sub('\D', '', filename)) for filename in os.listdir('x')])
+    max_x = max([*[int(re.sub('\D', '', filename)) for filename in os.listdir('x')], 0])
 try:
     os.mkdir('y')
 except FileExistsError:
-    max_y = max([int(re.sub('\D', '', filename)) for filename in os.listdir('y')])
+    max_y = max([*[int(re.sub('\D', '', filename)) for filename in os.listdir('y')], 0])
 
 s = max([max_x, max_y, 0]) + 1
 
-for i in range(s, 1000):
+for i in range(s, s+10):
+    seed = randint(1, 9999999)
     cylinders = ''.join(get_cylinders(0.7, 0.4, 0.01, 3, 0.05, 0.03))
 
     with open('in_file.in', 'w') as in_file:
-        in_file.write(in_file_content.format(cylinders=cylinders))
+        in_file.write(in_file_content.format(cylinders=cylinders, seed=seed))
 
-    api('in_file.in', geometry_only=True)
-    # load a vtk file as input
+    api('in_file.in', geometry_only=True) # 155 - full
     reader = pyvista.read('in_geometry.vti')
     shape = np.array([reader.dimensions[1], reader.dimensions[0]]) - 1
     material = reader['Material']
@@ -95,16 +98,23 @@ for i in range(s, 1000):
     in_img = in_img + abs(np.min(in_img))
     in_img = in_img / np.max(in_img) * 255
     in_img = Image.fromarray(in_img)
+    in_img.convert('RGB').save('x/in_{}.png'.format(i), 'PNG')
 
     with open('in_file.in', 'w') as in_file:
-        in_file.write(in_file_content.format(cylinders=cylinders).replace('#geometry_view', 'geometry_view'))
-
-    api('in_file.in', 155, gpu=[0])
+        in_file.write(in_file_content.format(cylinders=cylinders, seed=seed).replace('#geometry_view', 'geometry_view'))
+    fig = plt.figure(figsize=(20, 10), facecolor='w', edgecolor='w')
+    api('in_file.in', 155)
     merge_files('in_file', removefiles=True)
     data, dt = get_output_data('in_file_merged.out', 1, 'Ez')
-    data = data + abs(np.min(data))
+
+    # Усиливаем границы фильтром лапласа
+    data = laplace(data)
+    # Гауссово размытие
+    data = gaussian_filter(data, sigma=5)
+    # Нормируем значения матрицы
+    data += abs(np.min(data))
     data = data / np.max(data) * 255
+
     out_img = Image.fromarray(data)
     out_img = out_img.resize(in_img.size)
-    in_img.convert('RGB').save('x/in_{}.png'.format(i), 'PNG')
     out_img.convert('RGB').save('y/out_{}.png'.format(i), 'PNG')
