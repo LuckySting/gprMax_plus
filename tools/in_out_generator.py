@@ -103,7 +103,7 @@ for i in range(s, s+10):
     with open('in_file.in', 'w') as in_file:
         in_file.write(in_file_content.format(cylinders=cylinders, seed=seed).replace('#geometry_view', 'geometry_view'))
     fig = plt.figure(figsize=(20, 10), facecolor='w', edgecolor='w')
-    api('in_file.in', 155, gpu=True)
+    api('in_file.in', 155, gpu=[0])
     merge_files('in_file', removefiles=True)
     data, dt = get_output_data('in_file_merged.out', 1, 'Ez')
 
