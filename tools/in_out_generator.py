@@ -1,4 +1,5 @@
 import re
+import sys
 from random import randint
 
 import numpy as np
@@ -33,15 +34,15 @@ class Cylinder:
 
 def get_cylinders(width, height, boundary, max_cylinders, max_radius, min_radius, d=0.002, material='pvc'):
     number_of_cylinders = randint(1, max_cylinders)
-    rows = int((width - boundary) // (max_radius*2)) - 1
-    cols = int((height - 2 * boundary) // (max_radius*2)) - 1
+    rows = int((width - boundary) // (max_radius * 2)) - 1
+    cols = int((height - 2 * boundary) // (max_radius * 2)) - 1
     cylinders_map = np.zeros((cols, rows))
     np.put(cylinders_map, np.random.choice(range(cols * rows), number_of_cylinders, replace=False), 1)
     cylinders_locations = np.argwhere(cylinders_map == 1)
     cylinders = []
     for i, j in cylinders_locations:
-        x_pos = round(boundary + (j + 1) * (max_radius*2), 3)
-        y_pos = round(boundary + (i + 1) * (max_radius*2), 3)
+        x_pos = round(boundary + (j + 1) * (max_radius * 2), 3)
+        y_pos = round(boundary + (i + 1) * (max_radius * 2), 3)
         radius = round(randrange_float(min_radius, max_radius, d), 3)
         cylinders.append(str(Cylinder(radius, d * 5, x_pos, y_pos, d, material)))
     return cylinders
@@ -69,52 +70,62 @@ in_file_content = """
 
 #geometry_view: 0 0 0 0.7 0.4 0.002 0.002 0.002 0.002 in_geometry n
 """
-max_x = 0
-max_y = 0
+
 try:
     os.mkdir('x')
-except FileExistsError:
-    max_x = max([*[int(re.sub('\D', '', filename)) for filename in os.listdir('x')], 0])
+except:
+    pass
 try:
     os.mkdir('y')
-except FileExistsError:
-    max_y = max([*[int(re.sub('\D', '', filename)) for filename in os.listdir('y')], 0])
+except:
+    pass
 
-s = max([max_x, max_y, 0]) + 1
 
-for i in range(s, s+10):
-    seed = randint(1, 9999999)
-    cylinders = ''.join(get_cylinders(0.7, 0.4, 0.01, 3, 0.05, 0.03))
+def generate_files(start, count=10, gpu=False):
+    for i in range(start, start + count):
+        seed = randint(1, 9999999)
+        cylinders = ''.join(get_cylinders(0.7, 0.4, 0.01, 3, 0.05, 0.03))
 
-    with open('in_file.in', 'w') as in_file:
-        in_file.write(in_file_content.format(cylinders=cylinders, seed=seed))
+        with open('in_file.in', 'w') as in_file:
+            in_file.write(in_file_content.format(cylinders=cylinders, seed=seed))
 
-    api('in_file.in', geometry_only=True) # 155 - full
-    reader = pyvista.read('in_geometry.vti')
-    shape = np.array([reader.dimensions[1], reader.dimensions[0]]) - 1
-    material = reader['Material']
-    in_img = material.reshape(shape)
-    in_img = np.flip(in_img, axis=0)
-    in_img = in_img + abs(np.min(in_img))
-    in_img = in_img / np.max(in_img) * 255
-    in_img = Image.fromarray(in_img)
-    in_img.convert('RGB').save('x/in_{}.png'.format(i), 'PNG')
+        api('in_file.in', geometry_only=True)  # 155 - full
+        reader = pyvista.read('in_geometry.vti')
+        shape = np.array([reader.dimensions[1], reader.dimensions[0]]) - 1
+        material = reader['Material']
+        in_img = material.reshape(shape)
+        in_img = np.flip(in_img, axis=0)
+        in_img = in_img + abs(np.min(in_img))
+        in_img = in_img / np.max(in_img) * 255
+        in_img = Image.fromarray(in_img)
+        in_img.convert('RGB').save('x/in_{}.png'.format(i), 'PNG')
 
-    with open('in_file.in', 'w') as in_file:
-        in_file.write(in_file_content.format(cylinders=cylinders, seed=seed).replace('#geometry_view', 'geometry_view'))
-    fig = plt.figure(figsize=(20, 10), facecolor='w', edgecolor='w')
-    api('in_file.in', 155, gpu=[0])
-    merge_files('in_file', removefiles=True)
-    data, dt = get_output_data('in_file_merged.out', 1, 'Ez')
+        with open('in_file.in', 'w') as in_file:
+            in_file.write(
+                in_file_content.format(cylinders=cylinders, seed=seed).replace('#geometry_view', 'geometry_view'))
+        fig = plt.figure(figsize=(20, 10), facecolor='w', edgecolor='w')
+        if gpu:
+            api('in_file.in', 155, gpu=[0])
+        else:
+            api('in_file.in', 155)
+        merge_files('in_file', removefiles=True)
+        data, dt = get_output_data('in_file_merged.out', 1, 'Ez')
 
-    # Усиливаем границы фильтром лапласа
-    data = laplace(data)
-    # Гауссово размытие
-    data = gaussian_filter(data, sigma=5)
-    # Нормируем значения матрицы
-    data += abs(np.min(data))
-    data = data / np.max(data) * 255
+        # Усиливаем границы фильтром лапласа
+        data = laplace(data)
+        # Гауссово размытие
+        data = gaussian_filter(data, sigma=5)
+        # Нормируем значения матрицы
+        data += abs(np.min(data))
+        data = data / np.max(data) * 255
 
-    out_img = Image.fromarray(data)
-    out_img = out_img.resize(in_img.size)
-    out_img.convert('RGB').save('y/out_{}.png'.format(i), 'PNG')
+        out_img = Image.fromarray(data)
+        out_img = out_img.resize(in_img.size)
+        out_img.convert('RGB').save('y/out_{}.png'.format(i), 'PNG')
+
+
+if __name__ == "__main__":
+    if len(sys.argv) == 4:
+        generate_files(int(sys.argv[1]), int(sys.argv[2]), True)
+    else:
+        generate_files(int(sys.argv[1]), int(sys.argv[2]))
