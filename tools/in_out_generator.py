@@ -46,7 +46,7 @@ def get_cylinders(width, height, boundary, max_cylinders, max_radius, min_radius
 
 in_file_content = """
 #title: Generator of Bscan models for AI
-#domain: 0.7 0.4 0.002
+#domain: 1 1 0.002
 #dx_dy_dz: 0.002 0.002 0.002
 #time_window: 9e-9
 
@@ -54,33 +54,33 @@ in_file_content = """
 #material: 6 0 1 0 half_space
 
 #waveform: ricker 1 1.5e9 my_ricker
-#hertzian_dipole: z 0.02 0.35 0 my_ricker
-#rx: 0.06 0.35 0
+#hertzian_dipole: z 0.02 0.95 0 my_ricker
+#rx: 0.06 0.95 0
 #src_steps: 0.004 0 0
 #rx_steps: 0.004 0 0
 
 #soil_peplinski: 0.5 0.5 2.0 2.66 0.001 0.1 my_soil
-#fractal_box: 0 0 0 0.7 0.35 0.002 1.5 1 1 1 50 my_soil my_soil_box
+#fractal_box: 0 0 0 1 0.95 0.002 1.5 1 1 1 50 my_soil my_soil_box
 
 {cylinders}
 
-#geometry_view: 0 0 0 0.7 0.4 0.002 0.002 0.002 0.002 in_geometry n
+#geometry_view: 0 0 0 1 1 0.002 0.002 0.002 0.002 in_geometry n
 """
-max_x = 0
-max_y = 0
-try:
+
+if not os.path.isdir('x'):
     os.mkdir('x')
-except FileExistsError:
-    max_x = max([int(re.sub('\D', '', filename)) for filename in os.listdir('x')])
-try:
+if not os.path.isdir('y'):
     os.mkdir('y')
-except FileExistsError:
-    max_y = max([int(re.sub('\D', '', filename)) for filename in os.listdir('y')])
 
-s = max([max_x, max_y, 0]) + 1
+max_x = [int(re.sub('\D', '', filename)) for filename in os.listdir('x')]
+max_y = [int(re.sub('\D', '', filename)) for filename in os.listdir('y')]
+max_x.append(0)
+max_y.append(0)
 
-for i in range(s, 1000):
-    cylinders = ''.join(get_cylinders(0.7, 0.4, 0.01, 3, 0.05, 0.03))
+s = max([max(max_x), max(max_y)]) + 1
+
+for i in range(s, s+10):
+    cylinders = ''.join(get_cylinders(1, 0.95, 0.02, 1, 0.05, 0.03))
 
     with open('in_file.in', 'w') as in_file:
         in_file.write(in_file_content.format(cylinders=cylinders))
