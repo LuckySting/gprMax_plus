@@ -144,6 +144,9 @@ if __name__ == "__main__":
     elif len(sys.argv) == 3:
         generate_files(int(sys.argv[1]), int(sys.argv[2]))
     elif len(sys.argv) == 2:
-        generate_files(int(sys.argv[1]))
+        if sys.argv[1] == 'g':
+            generate_files(gpu=True)
+        else:
+            generate_files(int(sys.argv[1]))
     else:
         generate_files()
