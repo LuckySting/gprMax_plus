@@ -3,11 +3,10 @@ import sys
 from random import randint
 
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image
 import os
 
-from scipy.ndimage import gaussian_filter, laplace
-import matplotlib.pyplot as plt
+from scipy.ndimage import gaussian_filter
 from gprMax.gprMax import api
 from tools.outputfiles_merge import merge_files, get_output_data
 import pyvista
@@ -84,7 +83,7 @@ max_y.append(0)
 s = max([max(max_x), max(max_y)]) + 1
 
 
-def generate_files(start=s, count=1, gpu=False):
+def generate_files(start=s, count=10, gpu=False):
     for i in range(start, start + count):
         seed = randint(1, 9999999)
         cylinders = ''.join(get_cylinders(0.5, 0.45, 0.02, 1, 0.05, 0.03))
