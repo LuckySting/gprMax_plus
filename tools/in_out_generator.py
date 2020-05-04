@@ -121,7 +121,7 @@ def generate_files(start=s, count=10, gpu=False):
         data = data / np.max(data) * 255
 
         out_img = Image.fromarray(data)
-        out_img.resize(in_img.size)
+        out_img = out_img.resize(in_img.size)
         in_img.convert('RGB').save('x/in_{}.png'.format(i), 'PNG')
         out_img.convert('RGB').save('y/out_{}.png'.format(i), 'PNG')
 
