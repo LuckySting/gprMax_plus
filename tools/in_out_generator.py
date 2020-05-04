@@ -3,7 +3,7 @@ import sys
 from random import randint
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 import os
 
 from scipy.ndimage import gaussian_filter, laplace
@@ -50,7 +50,7 @@ def get_cylinders(width, height, boundary, max_cylinders, max_radius, min_radius
 
 in_file_content = """
 #title: Generator of Bscan models for AI
-#domain: 1 1 0.002
+#domain: 0.5 0.5 0.002
 #dx_dy_dz: 0.002 0.002 0.002
 #time_window: 9e-9
 
@@ -58,17 +58,17 @@ in_file_content = """
 #material: 6 0 1 0 half_space
 
 #waveform: ricker 1 1.5e9 my_ricker
-#hertzian_dipole: z 0.02 0.95 0 my_ricker
-#rx: 0.06 0.95 0
+#hertzian_dipole: z 0.02 0.45 0 my_ricker
+#rx: 0.06 0.45 0
 #src_steps: 0.004 0 0
 #rx_steps: 0.004 0 0
 
 #soil_peplinski: 0.5 0.5 2.0 2.66 0.001 0.1 my_soil
-#fractal_box: 0 0 0 1 0.95 0.002 1.5 1 1 1 50 my_soil my_soil_box
+#fractal_box: 0 0 0 0.5 0.45 0.002 1.5 1 1 1 50 my_soil my_soil_box
 
 {cylinders}
 
-#geometry_view: 0 0 0 0.7 0.4 0.002 0.002 0.002 0.002 in_geometry n
+#geometry_view: 0 0 0 0.5 0.5 0.002 0.002 0.002 0.002 in_geometry n
 """
 
 if not os.path.isdir('x'):
@@ -83,17 +83,16 @@ max_y.append(0)
 
 s = max([max(max_x), max(max_y)]) + 1
 
-for i in range(s, s+10):
-    cylinders = ''.join(get_cylinders(1, 0.95, 0.02, 1, 0.05, 0.03))
-def generate_files(start, count=10, gpu=False):
+
+def generate_files(start=s, count=1, gpu=False):
     for i in range(start, start + count):
         seed = randint(1, 9999999)
-        cylinders = ''.join(get_cylinders(0.7, 0.4, 0.01, 3, 0.05, 0.03))
+        cylinders = ''.join(get_cylinders(0.5, 0.45, 0.02, 1, 0.05, 0.03))
 
         with open('in_file.in', 'w') as in_file:
             in_file.write(in_file_content.format(cylinders=cylinders, seed=seed))
 
-        api('in_file.in', geometry_only=True)  # 155 - full
+        api('in_file.in', geometry_only=True)
         reader = pyvista.read('in_geometry.vti')
         shape = np.array([reader.dimensions[1], reader.dimensions[0]]) - 1
         material = reader['Material']
@@ -101,35 +100,51 @@ def generate_files(start, count=10, gpu=False):
         in_img = np.flip(in_img, axis=0)
         in_img = in_img + abs(np.min(in_img))
         in_img = in_img / np.max(in_img) * 255
+        in_img [in_img < 10] = 0
+        in_img [in_img >= 10] = 255
         in_img = Image.fromarray(in_img)
-        in_img.convert('RGB').save('x/in_{}.png'.format(i), 'PNG')
 
         with open('in_file.in', 'w') as in_file:
             in_file.write(
                 in_file_content.format(cylinders=cylinders, seed=seed).replace('#geometry_view', 'geometry_view'))
-        fig = plt.figure(figsize=(20, 10), facecolor='w', edgecolor='w')
+
         if gpu:
-            api('in_file.in', 155, gpu=[0])
+            api('in_file.in', 105, gpu=[0])
         else:
-            api('in_file.in', 155)
+            api('in_file.in', 105)
         merge_files('in_file', removefiles=True)
         data, dt = get_output_data('in_file_merged.out', 1, 'Ez')
 
-        # Усиливаем границы фильтром лапласа
-        data = laplace(data)
-        # Гауссово размытие
-        data = gaussian_filter(data, sigma=5)
+        # # Усиливаем границы фильтром лапласа
+        # data = laplace(data)
+        #
+        # # Гауссово размытие
+        # data = gaussian_filter(data, sigma=3)
+
+
         # Нормируем значения матрицы
         data += abs(np.min(data))
         data = data / np.max(data) * 255
 
+        img = Image.fromarray(data)
+        img = img.resize(in_img.size)
+        img = img.convert('RGB')
+        data = np.array(img)
+
+        # # Гауссово размытие
+        data = gaussian_filter(data, sigma=2)
+
         out_img = Image.fromarray(data)
-        out_img = out_img.resize(in_img.size)
+        in_img.convert('RGB').save('x/in_{}.png'.format(i), 'PNG')
         out_img.convert('RGB').save('y/out_{}.png'.format(i), 'PNG')
 
 
 if __name__ == "__main__":
     if len(sys.argv) == 4:
         generate_files(int(sys.argv[1]), int(sys.argv[2]), True)
-    else:
+    elif len(sys.argv) == 3:
         generate_files(int(sys.argv[1]), int(sys.argv[2]))
+    elif len(sys.argv) == 2:
+        generate_files(int(sys.argv[1]))
+    else:
+        generate_files()
