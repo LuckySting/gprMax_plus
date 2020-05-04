@@ -122,8 +122,8 @@ def generate_files(start=s, count=10, gpu=False):
 
         out_img = Image.fromarray(data)
         out_img = out_img.resize(in_img.size)
-        in_img.convert('RGB').save('x/in_{}.png'.format(i), 'PNG')
-        out_img.convert('RGB').save('y/out_{}.png'.format(i), 'PNG')
+        in_img.convert('RGB').save('y/in_{}.png'.format(i), 'PNG')
+        out_img.convert('RGB').save('x/out_{}.png'.format(i), 'PNG')
 
 
 if __name__ == "__main__":
