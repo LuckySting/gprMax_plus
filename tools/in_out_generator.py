@@ -105,11 +105,11 @@ def generate_files(start=s, count=10, gpu=False):
             in_file.write(
                 in_file_content.format(cylinders=cylinders, seed=seed).replace('#geometry_view', 'geometry_view'))
 
-        # if gpu:
-        #     api('in_file.in', 105, gpu=[0])
-        # else:
-        #     api('in_file.in', 105)
-        # merge_files('in_file', removefiles=True)
+        if gpu:
+            api('in_file.in', 105, gpu=[0])
+        else:
+            api('in_file.in', 105)
+        merge_files('in_file', removefiles=True)
         data, dt = get_output_data('in_file_merged.out', 1, 'Ez')
 
         # Усиливаем границы фильтром лапласа
