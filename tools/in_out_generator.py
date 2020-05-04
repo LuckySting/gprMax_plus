@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 import os
 
-from scipy.ndimage import gaussian_filter
+from scipy.ndimage import gaussian_filter, laplace
 from gprMax.gprMax import api
 from tools.outputfiles_merge import merge_files, get_output_data
 import pyvista
@@ -63,7 +63,7 @@ in_file_content = """
 #rx_steps: 0.004 0 0
 
 #soil_peplinski: 0.5 0.5 2.0 2.66 0.001 0.1 my_soil
-#fractal_box: 0 0 0 0.5 0.45 0.002 1.5 1 1 1 50 my_soil my_soil_box
+#fractal_box: 0 0 0 0.5 0.45 0.002 1.5 1 1 1 50 my_soil my_soil_box {seed}
 
 {cylinders}
 
@@ -99,41 +99,29 @@ def generate_files(start=s, count=10, gpu=False):
         in_img = np.flip(in_img, axis=0)
         in_img = in_img + abs(np.min(in_img))
         in_img = in_img / np.max(in_img) * 255
-        in_img [in_img < 10] = 0
-        in_img [in_img >= 10] = 255
         in_img = Image.fromarray(in_img)
 
         with open('in_file.in', 'w') as in_file:
             in_file.write(
                 in_file_content.format(cylinders=cylinders, seed=seed).replace('#geometry_view', 'geometry_view'))
 
-        if gpu:
-            api('in_file.in', 105, gpu=[0])
-        else:
-            api('in_file.in', 105)
-        merge_files('in_file', removefiles=True)
+        # if gpu:
+        #     api('in_file.in', 105, gpu=[0])
+        # else:
+        #     api('in_file.in', 105)
+        # merge_files('in_file', removefiles=True)
         data, dt = get_output_data('in_file_merged.out', 1, 'Ez')
 
-        # # Усиливаем границы фильтром лапласа
-        # data = laplace(data)
-        #
-        # # Гауссово размытие
-        # data = gaussian_filter(data, sigma=3)
-
-
+        # Усиливаем границы фильтром лапласа
+        data = laplace(data)
+        # Гауссово размытие
+        data = gaussian_filter(data, sigma=5)
         # Нормируем значения матрицы
         data += abs(np.min(data))
         data = data / np.max(data) * 255
 
-        img = Image.fromarray(data)
-        img = img.resize(in_img.size)
-        img = img.convert('RGB')
-        data = np.array(img)
-
-        # # Гауссово размытие
-        data = gaussian_filter(data, sigma=2)
-
         out_img = Image.fromarray(data)
+        out_img.resize(in_img.size)
         in_img.convert('RGB').save('x/in_{}.png'.format(i), 'PNG')
         out_img.convert('RGB').save('y/out_{}.png'.format(i), 'PNG')
 
