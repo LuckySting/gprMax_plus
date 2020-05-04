@@ -75,8 +75,8 @@ if not os.path.isdir('x'):
 if not os.path.isdir('y'):
     os.mkdir('y')
 
-max_x = [int(re.sub('\D', '', filename)) for filename in os.listdir('x')]
-max_y = [int(re.sub('\D', '', filename)) for filename in os.listdir('y')]
+max_x = [int(re.sub('\D', '', filename)) for filename in os.listdir('x') if re.sub('\D', '', filename) != '']
+max_y = [int(re.sub('\D', '', filename)) for filename in os.listdir('y') if re.sub('\D', '', filename) != '']
 max_x.append(0)
 max_y.append(0)
 
