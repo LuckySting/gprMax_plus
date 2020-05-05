@@ -99,6 +99,8 @@ def generate_files(start=s, count=10, gpu=False):
         in_img = np.flip(in_img, axis=0)
         in_img = in_img + abs(np.min(in_img))
         in_img = in_img / np.max(in_img) * 255
+        in_img[in_img < 15] = 0
+        in_img[in_img >= 15] = 255
         in_img = Image.fromarray(in_img)
 
         with open('in_file.in', 'w') as in_file:
