@@ -31,8 +31,8 @@ class Cylinder:
             depth=self.depth, material=self.material)
 
 
-def get_cylinders(width, height, boundary, max_cylinders, max_radius, min_radius, d=0.002, material='pvc'):
-    number_of_cylinders = randint(1, max_cylinders)
+def get_cylinders(width, height, boundary, count_cylinders, max_radius, min_radius, d=0.002, material='pvc'):
+    number_of_cylinders = count_cylinders
     rows = int((width - boundary) // (max_radius * 2)) - 1
     cols = int((height - 2 * boundary) // (max_radius * 2)) - 1
     cylinders_map = np.zeros((cols, rows))
@@ -83,10 +83,10 @@ max_y.append(0)
 s = max([max(max_x), max(max_y)]) + 1
 
 
-def generate_files(start=s, count=10, gpu=False):
+def generate_files(start=s, count=2, gpu=False):
     for i in range(start, start + count):
         seed = randint(1, 9999999)
-        cylinders = ''.join(get_cylinders(0.5, 0.45, 0.02, 1, 0.05, 0.03))
+        cylinders = ''.join(get_cylinders(0.5, 0.45, 0.02, 3, 0.05, 0.03))
 
         with open('in_file.in', 'w') as in_file:
             in_file.write(in_file_content.format(cylinders=cylinders, seed=seed))
