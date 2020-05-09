@@ -23,7 +23,7 @@ if __name__ == "__main__":
     args.outputfile = '../experements/3D_research/3d_plotting/cross_pipes_merged.out'
     args.rx_component = 'Ez'
     args.side_length = '21'
-    args.side_height = '60'
+    args.side_height = '21'
     args.threshold = '0.2'
     f = h5py.File(args.outputfile, 'r')
     nrx = f.attrs['nrx']

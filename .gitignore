@@ -2,6 +2,7 @@
 *.pyc
 *.pyo
 venv
+venv2
 # Cython
 *.c
 *.so
