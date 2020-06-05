@@ -10,7 +10,6 @@ venv2
 *.vti
 *.vtp
 *.out
-experements
 
 # Mac OS X
 .DS_Store
