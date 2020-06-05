@@ -1,7 +1,7 @@
 #title: A-scan GSSI 1.5GHz 'like' antenna in 3 meters
 #domain: 0.210 0.148 3
 #dx_dy_dz: 0.002 0.002 0.002
-#time_window: 60e-9
+#time_window: 100e-9
 
 #material: 6 0 1 0 half_space
 #material: 3 0.01 1 0 sand
